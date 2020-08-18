@@ -6,7 +6,6 @@ const GlobalStyle = createGlobalStyle`
     padding: 0;
     border: 0;
     box-sizing: border-box;
-    font-size: 50%;
   }
 
   
@@ -14,6 +13,7 @@ const GlobalStyle = createGlobalStyle`
     background: #312e38;
     color: #f6f6f6;
     --webkit-font-smoothing: antialiased;
+    
   }
 
   *:focus{
@@ -22,7 +22,7 @@ const GlobalStyle = createGlobalStyle`
 
   body,input, button{
     font-family: 'Roboto Slab', serif;
-    font-size: 1.6rem;
+    font-size: 16px;
     cursor: pointer;
   }
 
