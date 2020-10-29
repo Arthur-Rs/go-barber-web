@@ -2,10 +2,12 @@ import React, { ButtonHTMLAttributes } from 'react'
 
 import { Container } from './styles'
 
-type Ibutton = ButtonHTMLAttributes<HTMLButtonElement>
+type IButton = ButtonHTMLAttributes<HTMLButtonElement> & {
+  loading?: boolean
+}
 
-const Button: React.FC<Ibutton> = ({ ...rest }) => {
-  return <Container {...rest} />
+const Button: React.FC<IButton> = ({ children, loading, ...rest }) => {
+  return <Container {...rest}>{loading ? 'carregando...' : children}</Container>
 }
 
 export default Button

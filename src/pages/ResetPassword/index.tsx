@@ -1,12 +1,9 @@
-/* eslint-disable camelcase */
 import React, { useCallback, useRef } from 'react'
 import { Container, Content, Background, AnimationContainer } from './styles'
-import { Link, useHistory } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import { Form } from '@unform/web'
-import * as yup from 'yup'
 import { FormHandles } from '@unform/core'
-import api from '../../services/api'
-import { useToast } from '../../hooks/toast'
+import * as yup from 'yup'
 
 // => Components
 import Button from '../../components/Button'
@@ -16,54 +13,50 @@ import Input from '../../components/Input'
 import LogoImg from '../../assets/svgs/logo.svg'
 
 // => Icons
-import { FiArrowLeft, FiMail, FiUser, FiLock } from 'react-icons/fi'
+import { FiLock } from 'react-icons/fi'
 
 // => Utils
 import getValidationErros from '../../utils/getValidationErrors'
 
-interface FormData {
-  name: string
-  email: string
+// => Hooks
+import { useToast } from '../../hooks/toast'
+
+import Api from '../../services/api'
+
+interface IForm {
   password: string
   password_confirmation: string
 }
 
-const SignUp: React.FC = () => {
+const ResetPassword: React.FC = () => {
   const formRef = useRef<FormHandles>(null)
   const { addToast } = useToast()
   const { push: goRoute } = useHistory()
 
   const handleSubmit = useCallback(
-    async (data: FormData) => {
+    async (data: IForm) => {
       try {
         formRef.current?.setErrors({})
 
         const schema = yup.object().shape({
-          name: yup.string().required('Nome obrigatório!'),
-          email: yup
-            .string()
-            .email('E-mail invalido')
-            .required('E-mail obrigatório'),
           password: yup.string().min(8, 'Mínimo de 8 caracteres'),
-          password_confirmation: yup.string().min(8, 'Mínimo de 8 caracteres'),
+          password_confirmation: yup
+            .string()
+            .oneOf([yup.ref('password')], 'As senhas não estão iguais'),
         })
 
         await schema.validate(data, {
           abortEarly: false,
         })
 
-        const { name, email, password, password_confirmation } = data
-
-        await api.post('/users', {
-          name,
-          email,
-          password,
-          password_confirmation,
+        await Api.post('/password/reset', {
+          password: data.password,
+          password_confirmation: data.password_confirmation,
+          token: window.location.search.replace(/\?token=/, ''),
         })
 
         addToast({
-          title: 'Você foi cadastro com sucesso',
-          description: 'Você já pode fazer o logon na aplicação',
+          title: 'Senha recuperada com sucesso',
           type: 'success',
         })
 
@@ -73,13 +66,12 @@ const SignUp: React.FC = () => {
           const errors = getValidationErros(err)
 
           formRef.current?.setErrors(errors)
-
-          return
         }
 
         addToast({
-          title: 'Erro ao tentar fazer o cadastro',
-          description: 'Não foi possível fazer o cadastro na aplicação',
+          title: 'Não foi possível redefinir sua senha',
+          description:
+            'Aconteceu algo deu errado ao tentar resetar sua senha, por favor, tente novamente!',
           type: 'error',
         })
       }
@@ -93,21 +85,13 @@ const SignUp: React.FC = () => {
         <AnimationContainer>
           <img src={LogoImg} alt="Logo GoBarber" />
 
-          <Form ref={formRef} onSubmit={handleSubmit}>
-            <h1>Faça seu cadastro</h1>
-
-            <Input name="name" type="text" icon={FiUser} placeholder="Nome" />
-            <Input
-              name="email"
-              type="email"
-              icon={FiMail}
-              placeholder="Email"
-            />
+          <Form onSubmit={handleSubmit} ref={formRef}>
+            <h1>Alterar senha</h1>
             <Input
               name="password"
               type="password"
               icon={FiLock}
-              placeholder="Senha"
+              placeholder="Nova senha"
             />
             <Input
               name="password_confirmation"
@@ -115,12 +99,8 @@ const SignUp: React.FC = () => {
               icon={FiLock}
               placeholder="Confirme sua senha"
             />
-            <Button type="submit">Cadastrar</Button>
+            <Button type="submit">Redefinir</Button>
           </Form>
-          <Link to="/">
-            <FiArrowLeft />
-            Voltar para logon
-          </Link>
         </AnimationContainer>
       </Content>
       <Background />
@@ -128,4 +108,4 @@ const SignUp: React.FC = () => {
   )
 }
 
-export default SignUp
+export default ResetPassword

@@ -1,12 +1,9 @@
-/* eslint-disable camelcase */
-import React, { useCallback, useRef } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import { Container, Content, Background, AnimationContainer } from './styles'
 import { Link, useHistory } from 'react-router-dom'
 import { Form } from '@unform/web'
-import * as yup from 'yup'
 import { FormHandles } from '@unform/core'
-import api from '../../services/api'
-import { useToast } from '../../hooks/toast'
+import * as yup from 'yup'
 
 // => Components
 import Button from '../../components/Button'
@@ -16,54 +13,53 @@ import Input from '../../components/Input'
 import LogoImg from '../../assets/svgs/logo.svg'
 
 // => Icons
-import { FiArrowLeft, FiMail, FiUser, FiLock } from 'react-icons/fi'
+import { FiArrowLeft, FiMail } from 'react-icons/fi'
 
 // => Utils
 import getValidationErros from '../../utils/getValidationErrors'
 
-interface FormData {
-  name: string
+// => Hooks
+import { useToast } from '../../hooks/toast'
+
+import Api from '../../services/api'
+
+interface Iform {
   email: string
-  password: string
-  password_confirmation: string
 }
 
-const SignUp: React.FC = () => {
+const ForgotPassword: React.FC = () => {
   const formRef = useRef<FormHandles>(null)
   const { addToast } = useToast()
   const { push: goRoute } = useHistory()
 
+  const [loading, setLoading] = useState(false)
+
   const handleSubmit = useCallback(
-    async (data: FormData) => {
+    async (data: Iform) => {
       try {
+        setLoading(true)
+
         formRef.current?.setErrors({})
 
         const schema = yup.object().shape({
-          name: yup.string().required('Nome obrigatório!'),
           email: yup
             .string()
             .email('E-mail invalido')
             .required('E-mail obrigatório'),
-          password: yup.string().min(8, 'Mínimo de 8 caracteres'),
-          password_confirmation: yup.string().min(8, 'Mínimo de 8 caracteres'),
         })
 
         await schema.validate(data, {
           abortEarly: false,
         })
 
-        const { name, email, password, password_confirmation } = data
-
-        await api.post('/users', {
-          name,
-          email,
-          password,
-          password_confirmation,
+        Api.post('/password/forgot', {
+          email: data.email,
         })
 
         addToast({
-          title: 'Você foi cadastro com sucesso',
-          description: 'Você já pode fazer o logon na aplicação',
+          title: 'Sucesso na recuperação de senha',
+          description:
+            'Um email com o link para recuperar a senha foi enviado para você!',
           type: 'success',
         })
 
@@ -73,15 +69,16 @@ const SignUp: React.FC = () => {
           const errors = getValidationErros(err)
 
           formRef.current?.setErrors(errors)
-
-          return
         }
 
         addToast({
-          title: 'Erro ao tentar fazer o cadastro',
-          description: 'Não foi possível fazer o cadastro na aplicação',
+          title: 'Error ao tentar recuperar sua senha',
+          description:
+            'Não possível recuperar sua senha no momento, tente novamente!',
           type: 'error',
         })
+      } finally {
+        setLoading(false)
       }
     },
     [addToast, goRoute],
@@ -93,33 +90,22 @@ const SignUp: React.FC = () => {
         <AnimationContainer>
           <img src={LogoImg} alt="Logo GoBarber" />
 
-          <Form ref={formRef} onSubmit={handleSubmit}>
-            <h1>Faça seu cadastro</h1>
+          <Form onSubmit={handleSubmit} ref={formRef}>
+            <h1>Recuperar senha</h1>
 
-            <Input name="name" type="text" icon={FiUser} placeholder="Nome" />
             <Input
               name="email"
               type="email"
               icon={FiMail}
               placeholder="Email"
             />
-            <Input
-              name="password"
-              type="password"
-              icon={FiLock}
-              placeholder="Senha"
-            />
-            <Input
-              name="password_confirmation"
-              type="password"
-              icon={FiLock}
-              placeholder="Confirme sua senha"
-            />
-            <Button type="submit">Cadastrar</Button>
+            <Button loading={loading} type="submit">
+              Recuperar
+            </Button>
           </Form>
           <Link to="/">
             <FiArrowLeft />
-            Voltar para logon
+            Voltar ao login
           </Link>
         </AnimationContainer>
       </Content>
@@ -128,4 +114,4 @@ const SignUp: React.FC = () => {
   )
 }
 
-export default SignUp
+export default ForgotPassword

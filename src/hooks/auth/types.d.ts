@@ -6,7 +6,7 @@ export interface contextInterface {
 }
 
 export interface userInterface {
-  avatarPath: null
+  avatar_url: string
   email: string
   id: string
   name: string
